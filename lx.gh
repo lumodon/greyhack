@@ -8,21 +8,19 @@ crypto = load_library("crypto.so")
 if not crypto then exit("<color=#ff0000>No crypto library found</color>")
 
 hackLibs = get_local_hacks()
-shells = [null]
-
-print("<color=#00FFAA>DEBUG: Shells Length with single null inside: " + shells.len + "</color>")
+shells = []
 
 for hackLib in hackLibs
 	if hackLib.hacks.len == 0 then exit("<color=#FF0000>Error: No local hacks found.\nSWITCH YOUR WI-FI YOU'RE GOING TO EVENTUALLY GET CAUGHT</color>")
 
-	lib = load_library(hackLib.dump)
+	lib = hackLib.dump
 	if not lib then
 		print("Strange Error: lib " + hackLib.library + " had no associated metaLib")
 		continue
 	end if
 
 	print("Attempting " + hackLib.library)
-	for hack in hacksLib.hacks
+	for hack in hackLib.hacks
 		for value in hack.values
 			result = lib.overflow(hack.memory, value, "pass")
 
@@ -38,7 +36,7 @@ for hackLib in hackLibs
 end for
 
 
-if shells.len <= 1 then exit("<color=#EEFF00>Warning: No shells obtained from those local hacks. Better hope you got a password otherwise prepare to dc and switch wifi</color>")
+if shells.len == 0 then exit("<color=#EEFF00>Warning: No shells obtained from those local hacks. Better hope you got a password otherwise prepare to dc and switch wifi</color>")
 
 default = null
 while not default
