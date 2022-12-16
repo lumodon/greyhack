@@ -7,7 +7,10 @@ if not mx then exit("<color=#ff0000>No metaxploit library found</color>")
 crypto = load_library("crypto.so")
 if not crypto then exit("<color=#ff0000>No crypto library found</color>")
 
-hackLibs = get_local_hacks()
+if not params.len then exit("Missing parameter - include lib name to exploit")
+if params[0][-3:] != ".so" then params[0] = params[0] + ".so"
+
+hackLibs = exploit_lib(params[0])
 shells = []
 
 for hackLib in hackLibs
@@ -49,7 +52,7 @@ while not default
 	print("0. Exit")
 	answer = user_input("Enter choice: ")
 	answer = answer.val
-	if answer > 0 and answer <= shells.len then
+	if answer > 0 and answer < shells.len then
 		default = shells[answer - 1]
 	end if
 	if answer == 0 then exit("You chose to exit instead.")

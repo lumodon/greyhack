@@ -93,7 +93,6 @@ end function
 
 print_hacks = function(lib = 0)
 	cacheFolderPath = parent_path(program_path) + "/cache"
-	files = [cacheFolderPath]
 	localPc = get_shell.host_computer
 	cacheFolder = localPc.File(cacheFolderPath)
 	cacheSubFolders = cacheFolder.get_folders
@@ -101,30 +100,27 @@ print_hacks = function(lib = 0)
 	libs = {}
 
 	if lib != 0 then
+		print("specific lib chosen... seeking that lib")
 		libFolder = localPc.File(cacheFolderPath + "/" + lib)
 		if not libFolder then exit("lib folder given not functional")
 		libs[lib] = {}
 		for versionFolder in libFolder.get_folders
-			files.push(versionFolder.path)
 			libs[lib][versionFolder.name] = {}
 			memFiles = versionFolder.get_files
 			for memFile in memFiles
 				libs[lib][versionFolder.name][memFile.name] = memFile.get_content[1:].split("\n")
-				files.push(memFile.path)
 			end for
 		end for
 	else
+		print("no lib chosen... seeking all libs")
 		for libFolder in cacheSubFolders
-			files.push(libFolder.path)
 			libSubFolders = libFolder.get_folders
 			libs[libFolder.name] = {}
 			for versionFolder in libSubFolders
-				files.push(versionFolder.path)
 				memFiles = versionFolder.get_files
 				libs[libFolder.name][versionFolder.name] = {}
 				for memFile in memFiles
 					libs[libFolder.name][versionFolder.name][memFile.name] = memFile.get_content[1:].split("\n")
-					files.push(memFile.path)
 				end for
 			end for
 		end for
@@ -132,30 +128,31 @@ print_hacks = function(lib = 0)
 
 	indexI = 0
 	for lib in libs.indexes
-		print(indexI + ". " + lib)
 		indexI = indexI + 1
+		print(indexI + ". " + lib)
 	end for
 	print("0. Exit")
 	answer = user_input("Enter choice: ")
 	answer = answer.val
-	if answer > 0 and answer < libs.indexes.len then
+	if answer > 0 and answer <= libs.indexes.len then
 		libChoice = libs[libs.indexes[answer - 1]]
 	end if
 	if answer == 0 then exit("You chose to exit instead.")
 
 	indexI = 0
 	for ver in libChoice.indexes
-		print(indexI + ". " + ver)
 		indexI = indexI + 1
+		print(indexI + ". " + ver)
 	end for
 	print("0. Exit")
 	answer = user_input("Enter choice: ")
 	answer = answer.val
-	if answer > 0 and answer < libChoice.indexes.len then
+	if answer > 0 and answer <= libChoice.indexes.len then
 		verChoice = libChoice[libChoice.indexes[answer - 1]]
 	end if
 	if answer == 0 then exit("You chose to exit instead.")
 
+	print("\n")
 	for mem in verChoice.indexes
 		print("mem: " + mem + "\nValues: " + verChoice[mem])
 	end for
@@ -241,6 +238,28 @@ get_remote_hacks = function(addr = null, port = 0)
 	hacks = obtain_mems(metaLib)
 	result = { "library": metaLibNameVer, "dump": metaLib, "hacks": hacks }
 	return result
+end function
+
+exploit_lib = function(targetLib, localShell = null)
+	hacks = []
+	mx = load_library("metaxploit.so")
+	if not mx then exit("<color=#FF0000>No metaxploit library found</color>")
+	if not localShell then localShell = get_shell
+
+	metaLib = mx.load("/lib/" + targetLib)
+	if not metaLib then
+		print("<color=#EEFF00>" + targetLib + " was not found on this system.</color>")
+		return []
+	end if
+
+	fileHacks = {
+		"library": metaLib.lib_name + ":" + metaLib.version,
+		"dump": metaLib,
+		"hacks": obtain_mems(metaLib, localShell),
+	}
+	hacks.push(fileHacks)
+
+	return hacks
 end function
 
 get_local_hacks = function(localShell = null)
