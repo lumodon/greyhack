@@ -92,23 +92,38 @@ obtain_mems = function(metaLib = null, localShell = null)
 end function
 
 upload_hacks = function(shell = null)
+	cacheFolderPath = parent_path(program_path) + "/cache"
 	filenames = ["metaxploit.so", "crypto.so", "lx", "cache"]
-	files = []
+	files = [cacheFolderPath]
 	localPc = get_shell.host_computer
 	dirs = dedupe([
-		"/lib/",
-		"/bin/",
-		current_path + "/",
-		home_dir + "/",
-		home_dir + "/Src/",
-		parent_path(launch_path) + "/",
+		//' "/lib/",
+		//' "/bin/",
+		//' current_path + "/",
+		//' home_dir + "/",
+		//' parent_path(launch_path) + "/",
+		parent_path(program_path) + "/Src/",
 		parent_path(program_path) + "/",
 	])
+
+	cacheFolder = localPc.File(cacheFolderPath)
+	cacheSubFolders = cacheFolder.get_folders
+	for libFolder in cacheSubFolders
+		files.push(libFolder.path)
+		libSubFolders = libFolder.get_folders
+		for versionFolder in libSubFolders
+			files.push(versionFolder.path)
+			memFiles = versionFolder.get_files
+			for memFile in memFiles
+				files.push(memFile.path)
+			end for
+		end for
+	end for
 
 	for filename in filenames
 		for dir in dirs
 			if localPc.File(dir + filename) then
-				files = files + [dir + filename]
+				files.push(dir + filename)
 				break
 			end if
 		end for
@@ -117,7 +132,8 @@ upload_hacks = function(shell = null)
 
 	//' Transfer files
 	for file in files
-		file.chmod("u+rwx,g+rwx,o+rwx")
+		tFile = get_shell.host_computer.File(file)
+		tFile.chmod("u+rwx,g+rwx,o+rwx")
 		get_shell.scp(file, "/home/guest", shell)
 		wait(0.1)
 	end for
