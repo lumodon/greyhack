@@ -11,7 +11,7 @@ dedupe = function(list = [])
 	return maplist.indexes
 end function
 
-load_library = function(libname = "kernel_module.so")
+load_library = function(libname)
 	if not libname then exit("App Error: No lib given by application itself for include_lib module")
 	if typeof(libname) != "string" then exit("App Error: Lib string was not passed into include_lib module")
 
