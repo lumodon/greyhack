@@ -60,7 +60,7 @@ end while
 
 // Login to normal user account.
 print("Logging into normal user account...")
-homedir = default.shell.host_computer.File("/home")
+homedir = default.computer.File("/home")
 if not homedir then exit("Error: Could not get home directory.")
 username = null
 usershell = null
@@ -71,15 +71,26 @@ for dir in homedir.get_folders
 		if usershell != null then break
 	end if
 end for
+
+crpytTargetPc = null
+
 if not usershell then
-	print("Password not modified, logging into guest shell.")
-	default.shell.start_terminal
+	print("Password not modified")
+	if default.type == "shell" then
+		crpytTargetPc = default.computer
+		print("logging into guest shell.")
+		default.shell.start_terminal
+	else
+		print("Cannot move forwards. No guest shell. No modified password. bad exploit")
+	end if
+else
+	cryptTargetPc = usershell.host_computer
 end if
 
 // Get root access.
 print("Getting root access...")
 if not crypto then exit("Error: Crypto not found on system.")
-file = usershell.host_computer.File("/etc/passwd")
+file = cryptTargetPc.File("/etc/passwd")
 if not file then exit("Error: Cannot get passwd file.")
 if not file.has_permission("r") then exit("/etc/passwd: Permission denied.")
 if file.is_binary or file.is_folder then exit("File is either binary or a folder.")

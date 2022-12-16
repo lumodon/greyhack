@@ -160,12 +160,13 @@ end function
 
 upload_hacks = function(shell = null)
 	cacheFolderPath = parent_path(program_path) + "/cache"
-	filenames = ["metaxploit.so", "crypto.so", "lx", "cache"]
+	filenames = ["metaxploit.so", "crypto.so", "nmap", "x", "lx", "cache", "LogViewer.exe", "ScanLan.exe"]
 	files = [cacheFolderPath]
 	localPc = get_shell.host_computer
 	dirs = dedupe([
 		//' "/lib/",
 		//' "/bin/",
+		"/usr/bin/",
 		//' current_path + "/",
 		//' home_dir + "/",
 		//' parent_path(launch_path) + "/",
@@ -173,19 +174,19 @@ upload_hacks = function(shell = null)
 		parent_path(program_path) + "/",
 	])
 
-	cacheFolder = localPc.File(cacheFolderPath)
-	cacheSubFolders = cacheFolder.get_folders
-	for libFolder in cacheSubFolders
-		files.push(libFolder.path)
-		libSubFolders = libFolder.get_folders
-		for versionFolder in libSubFolders
-			files.push(versionFolder.path)
-			memFiles = versionFolder.get_files
-			for memFile in memFiles
-				files.push(memFile.path)
-			end for
-		end for
-	end for
+	//' cacheFolder = localPc.File(cacheFolderPath)
+	//' cacheSubFolders = cacheFolder.get_folders
+	//' for libFolder in cacheSubFolders
+	//' 	files.push(libFolder.path)
+	//' 	libSubFolders = libFolder.get_folders
+	//' 	for versionFolder in libSubFolders
+	//' 		files.push(versionFolder.path)
+	//' 		memFiles = versionFolder.get_files
+	//' 		for memFile in memFiles
+	//' 			files.push(memFile.path)
+	//' 		end for
+	//' 	end for
+	//' end for
 
 	for filename in filenames
 		for dir in dirs
@@ -289,18 +290,27 @@ end function
 
 get_shell_type = function(result)
 	shell = {}
+	targetPc = null
+
 	if typeof(result) == "shell" then
 		targetPc = result.host_computer
-		if targetPc.touch("/home/guest", "anonymous.dat") then
-			file = targetPc.File("/home/guest/anonymous.dat")
-			if not file then
-				print("File doesn't exist.")
-				exit()
-			end if
-			shell["user"] = file.owner
-			shell["shell"] = result
-			file.delete
-		end if
+	else if typeof(result) == "computer" then
+		targetPc = result
 	end if
+
+	if targetPc.touch("/home/guest", "anonymous.dat") then
+		file = targetPc.File("/home/guest/anonymous.dat")
+		if not file then
+			print("File doesn't exist.")
+			exit()
+		end if
+		shell["groups"] = targetPc.groups(file.owner)
+		shell["user"] = file.owner
+		shell["shell"] = result
+		shell["computer"] = targetPc
+		shell["type"] = typeof(result)
+		file.delete
+	end if
+
 	return shell
 end function
