@@ -91,6 +91,76 @@ obtain_mems = function(metaLib = null, localShell = null)
 	return hacks
 end function
 
+print_hacks = function(lib = 0)
+	cacheFolderPath = parent_path(program_path) + "/cache"
+	files = [cacheFolderPath]
+	localPc = get_shell.host_computer
+	cacheFolder = localPc.File(cacheFolderPath)
+	cacheSubFolders = cacheFolder.get_folders
+
+	libs = {}
+
+	if lib != 0 then
+		libFolder = localPc.File(cacheFolderPath + "/" + lib)
+		if not libFolder then exit("lib folder given not functional")
+		libs[lib] = {}
+		for versionFolder in libFolder.get_folders
+			files.push(versionFolder.path)
+			libs[lib][versionFolder.name] = {}
+			memFiles = versionFolder.get_files
+			for memFile in memFiles
+				libs[lib][versionFolder.name][memFile.name] = memFile.get_content[1:].split("\n")
+				files.push(memFile.path)
+			end for
+		end for
+	else
+		for libFolder in cacheSubFolders
+			files.push(libFolder.path)
+			libSubFolders = libFolder.get_folders
+			libs[libFolder.name] = {}
+			for versionFolder in libSubFolders
+				files.push(versionFolder.path)
+				memFiles = versionFolder.get_files
+				libs[libFolder.name][versionFolder.name] = {}
+				for memFile in memFiles
+					libs[libFolder.name][versionFolder.name][memFile.name] = memFile.get_content[1:].split("\n")
+					files.push(memFile.path)
+				end for
+			end for
+		end for
+	end if
+
+	indexI = 0
+	for lib in libs.indexes
+		print(indexI + ". " + lib)
+		indexI = indexI + 1
+	end for
+	print("0. Exit")
+	answer = user_input("Enter choice: ")
+	answer = answer.val
+	if answer > 0 and answer < libs.indexes.len then
+		libChoice = libs[libs.indexes[answer - 1]]
+	end if
+	if answer == 0 then exit("You chose to exit instead.")
+
+	indexI = 0
+	for ver in libChoice.indexes
+		print(indexI + ". " + ver)
+		indexI = indexI + 1
+	end for
+	print("0. Exit")
+	answer = user_input("Enter choice: ")
+	answer = answer.val
+	if answer > 0 and answer < libChoice.indexes.len then
+		verChoice = libChoice[libChoice.indexes[answer - 1]]
+	end if
+	if answer == 0 then exit("You chose to exit instead.")
+
+	for mem in verChoice.indexes
+		print("mem: " + mem + "\nValues: " + verChoice[mem])
+	end for
+end function
+
 upload_hacks = function(shell = null)
 	cacheFolderPath = parent_path(program_path) + "/cache"
 	filenames = ["metaxploit.so", "crypto.so", "lx", "cache"]

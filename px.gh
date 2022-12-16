@@ -1,0 +1,4 @@
+import_code("/home/usr/Src/includelib.src")
+import_code("/home/usr/Src/hackutils.src")
+
+print_hacks(params[0])
