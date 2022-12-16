@@ -1,0 +1,66 @@
+cacheHacks =
+{
+  "kernal.so:v1.0.0": {
+    "0x55FFAC": [
+      "asdfsdf",
+      "sadffwe",
+      "wbwbwbww",
+    ],
+    "0x5A3FF3": [
+      "asdfsdf",
+      "sadffwe",
+      "wbwbwbww",
+    ],
+  },
+  "init.so:v1.0.0": {
+    "0x55FFAC": [
+      "asdfsdf",
+      "sadffwe",
+      "wbwbwbww",
+    ],
+    "0x5A3FF3": [
+      "asdfsdf",
+      "sadffwe",
+      "wbwbwbww",
+    ],
+  },
+}
+
+
+cacheHacks =
+{
+  "kernal.so:v1.0.0": [
+    {
+      "memory": "0x55FFAC",
+      "values": [
+        "asdfsdf",
+        "sadffwe",
+        "wbwbwbww",
+      ],
+    }, {
+      "memory": "0x5A3FF3",
+      "values": [
+        "asdfsdf",
+        "sadffwe",
+        "wbwbwbww",
+      ],
+    },
+  ],
+  "init.so:v1.0.0": [
+    {
+      "memory": "0x55FFAC",
+      "values": [
+        "asdfsdf",
+        "sadffwe",
+        "wbwbwbww",
+      ],
+    }, {
+      "memory": "0x5A3FF3",
+      "values": [
+        "asdfsdf",
+        "sadffwe",
+        "wbwbwbww",
+      ],
+    },
+  ],
+}

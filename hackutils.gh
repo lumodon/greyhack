@@ -1,0 +1,181 @@
+obtain_mems = function(metaLib = null, targetShell = null, localShell = null)
+	mx = load_library("metaxploit.so")
+
+	if not metaLib then
+		print("<color=#FF0000>Usage Error: no metalib passed in to obtain_mems in hackerutils module</color>")
+		return []
+	end if
+	if not targetShell then targetShell = get_shell
+	if not localShell then localShell = get_shell
+
+	targetCpu = targetShell.host_computer
+
+	cachePath = current_path + "/cache.src"
+	soughtLibAndVer = metaLib.lib_name + "v" + metaLib.version
+	print("Seeking '" + soughtLibAndVer + "' library cache")
+
+	hacks = []
+	cache = targetCpu.File(cachePath)
+	if cache != null then
+		import_code(cachePath)
+		if not cacheHacks then
+			print("<color=#FF0000>\nBig error: Cache exists but is not JSON readable\n\n</color>")
+			return []
+		end if
+
+		if cacheHacks.indexOf(soughtLibAndVer) then
+			return cacheHacks[soughtLibAndVer]
+		end if
+	else
+		print("<color=#EEFF00>Warning: Scan cache not present. Scanning manually. Next time upload your cache file</color>")
+		targetCpu.touch(cachePath)
+		cache = targetCpu.File(cachePath)
+	end if
+
+
+	//' No cache of this lib found. Lets scan it
+	print("No hacks obtained from cache... scanning now")
+	addresses = mx.scan(metaLib)
+	for mem in addresses
+		hIter = {}
+		values = []
+		data = mx.scan_address(metaLib, mem)
+
+		//' Print entire object so we can analyze how to parse
+		print("<color=#AAFFCC>" + data + "</color>")
+
+		strings = data.split("Unsafe check: ")
+		for string in strings
+			if string == strings[0] then continue
+
+			value = string[string.indexOf("<b>")+3:string.indexOf("</b>")]
+			values = values + [value]
+		end for
+		hIter["memory"] = mem
+		hIter["values"] = values
+		hacks = hacks + [hIter]
+	end for
+
+	if cacheHacks == null then cacheHacks = {}
+
+	cacheHacks[soughtLibAndVer] = hacks
+	cache.set_content = "cacheHacks = " + cacheHacks
+
+	//' NOT WORKING - how do we get shell from executing lx within remote shell?
+	//' no way to reference origin
+	//'
+	//' if localShell != targetShell then
+	//'	targetShell.scp(cachePath, "/lib", localShell)
+	//' else
+	//'	cache.copy("/lib", "cache.src")
+	//' end if
+
+	print("hacks:\n-------\n" + hacks + "\n\n-------\n")
+	return hacks
+end function
+
+upload_hacks = function(shell = null)
+	files = []
+	filenames = ["metaxploit.so", "crypto.so", "lx", "cache.src"]
+	dirs = dedupe(["/lib/", "/bin/", current_path + "/", home_dir + "/", home_dir + "/Src/", parent_path(launch_path) + "/", parent_path(program_path) + "/"])
+	localCpu = get_shell.host_computer
+
+	for filename in filenames
+		for dir in dirs
+			if localCpu.File(dir + filename) then
+				files = files + [dir + filename]
+				break
+			end if
+		end for
+	end for
+	if files.len == 0 then exit("Error: Cannot get files for transfer.")
+
+	//' Transfer files
+	for file in files
+		file.chmod("u+rwx,g+rwx,o+rwx")
+		get_shell.scp(file, "/home/guest", shell)
+		wait(0.1)
+	end for
+
+	//' Chown files
+	remoteCpu = shell.host_computer
+	for filename in filenames
+		file = remoteCpu.File("/home/guest/" + filename)
+		if not file then continue
+		file.set_group("guest")
+		file.set_owner("guest")
+		wait(0.1)
+	end for
+end function
+
+get_remote_hacks = function(addr = null, port = 0)
+	if addr == null then exit("<color=#ff0000>No address given</color>")
+	if typeof(port) == "string" then port = port.to_int
+
+	mx = load_library("metaxploit.so")
+	if not mx then exit("<color=#ff0000>No metaxploit library found</color>")
+
+	if port == 0 then
+		netSession = mx.net_use(addr)
+	else
+		netSession = mx.net_use(addr, port)
+	end if
+
+	if not netSession then exit("<color=#FF0000>Error: Unable to connect.</color>")
+	metaLib = netSession.dump_lib
+	if not metaLib then exit("<color=#FF0000>Error: No library from network session library dump.</color>")
+	metaLibNameVer = metaLib.lib_name + ":" + metaLib.version
+	print(metaLibNameVer)
+
+	hacks = obtain_mems(metaLib)
+	result = { "library": metaLibNameVer, "dump": metaLib, "hacks": hacks }
+	return result
+end function
+
+get_local_hacks = function(localShell = null, remoteShell = null)
+	filenames = ["net.so", "init.so", "kernel_module.so", "kernel_router.so"]
+	hacks = []
+	mx = load_library("metaxploit.so")
+	if not mx then exit("<color=#FF0000>No metaxploit library found</color>")
+	//' if not localShell then
+	//'   print("<color=#FF0000>-----  Lexical Argument Exception: -----\nget_local_hacks called without passing a valid origin shell (local shell)\n----------------------------------------</color>")
+	//'   return []
+	//' end if
+	if not localShell then localShell = get_shell
+	if not remoteShell then remoteShell = get_shell
+
+	for filename in filenames
+		metaLib = mx.load("/lib/" + filename)
+		if not metaLib then
+			print("<color=#EEFF00>" + filename + " was not found on this system. Moving on to next...</color>")
+			continue
+		end if
+
+		fileHacks = {
+			"library": metaLib.lib_name + ":" _ metaLib.version,
+			"dump": metaLib,
+			"hacks": obtain_mems(metaLib, remoteShell, localShell),
+		}
+		hacks.push(fileHacks)
+	end for
+
+	return hacks
+end function
+
+get_shell_type = function(result)
+	shell = {}
+	if typeof(result) == "shell" then
+		targetCpu = result.host_computer
+		if targetCpu.touch("/home/guest", "anonymous.dat") then
+			file = targetCpu.File("/home/guest/anonymous.dat")
+			if not file then
+				print("File doesn't exist.")
+				exit()
+			end if
+			shell["user"] = file.owner
+			shell["shell"] = result
+			file.delete
+		end if
+	end if
+	return shell
+end function

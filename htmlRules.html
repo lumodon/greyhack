@@ -1,0 +1,52 @@
+<!doctype html>
+<title>Site Maintenance</title>
+<style>
+  body { text-align: center; padding: 25px; }
+  h1 { font-size: 50px; }
+  body { font: 20px Helvetica, sans-serif; color: #333; }
+  article { display: block; text-align: left; width: 650px; margin: 0 auto; }
+  html{
+    background-color: whitesmoke;
+    height:100%;
+  }
+  .da-button { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 0; }
+  .hero { overflow-y: scroll; height: 90vh; }
+</style>
+<article>
+    <div class="hero">
+      <h1>What doesn't work</h1>
+      <ul>
+		<li>Cannot use event listener for button click</li>
+		<li>Cannot use arrow functions</li>
+		<li>CSS: Cannot use flexbox (big sad)</li>
+		<li>Cannot console log (or if we can, cannot see it anyway)</li>
+		<li>If some script fails then ALL script fails entirely even if in different script atg</li>
+		<li>querySelector - and so probably querySelectorAll too which makes quite a few things unbelievably difficult</li>
+		<li>string Templates - backtick that is - at all not just unavailability of variable escaping</li>
+	  </ul>
+	  <h1>What <em>does</em> work</h1>
+	  <ul>
+	    <li>Single quotes for strings (though the CodeEditor loses syntax highlighting when doing so)</li>
+		<li>const</li>
+		<li>CSS: overflow-y as well as vh and vw viewHeighths and viewWidths</li>
+		<li>String concatenation via plus (thank goodness no need to use built-in `.concat` every time)</li>
+		<li>JSON.stringify! -- but the delimiter and spacing doesn't seem to work.</li>
+	  </ul>
+	  <hr>
+	  <p>Okay so far either event listener not work or arrow functions not working. Testing ES6 limits further below</p>
+	  <p>Confirmed that event listener DOMContentLoaded is not working. how about arrow functions then? const works so <em>some</em> of <strong>ECMA2015</strong> is working</p>
+      <!-- <p class="output" id="output">Sorry for the inconvenience but we are performing some maintenance at the moment. We will be back online shortly!</p> -->
+      <p class="output2" id="output2">The Team</p>
+      <div class="flexbox-test">
+        <button id="da-button">Press Me</button>
+      </div>
+      <p id="other-output">0</p>
+      <p id="other-output2"></p>
+    </div>
+    <script>
+//		var oopt = document.getElementById("other-output2");
+        const sstr = JSON.stringify(["some string"], 0, 2);
+		const oopt = document.getElementById("other-output2");
+		oopt.innerText = "friendly spiderman test2" + sstr;
+    </script>
+  </article>

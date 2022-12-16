@@ -1,0 +1,31 @@
+// Ugh why is this so hard. So many refactor iterations.
+// This one is good enough - it sacrafices guarentee of original list order
+// I could care less, I just want easy and quick dedupe.
+dedupe = function(list = [])
+	maplist = {}
+	for listitem in list
+		if not maplist.hasIndex(listitem) then
+			maplist[listitem] = "true"
+		end if
+	end for
+	return maplist.indexes
+end function
+
+load_library = function(libname = "kernel_module.so")
+	if not libname then exit("App Error: No lib given by application itself for include_lib module")
+	if typeof(libname) != "string" then exit("App Error: Lib string was not passed into include_lib module")
+
+	dirs = dedupe(["/lib/", current_path + "/", home_dir + "/", parent_path(launch_path) + "/", parent_path(program_path) + "/"])
+
+	for dir in dirs
+		daLib = include_lib(dir + libname)
+		if daLib then break
+	end for
+
+	if not daLib then
+		print("Cannot find " + libname + " library in any of the common locations.")
+		return null
+	end if
+
+  return daLib
+end function
